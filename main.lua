@@ -1,16 +1,38 @@
-lick = require "lick"
-lick.reset = true
+DEBUG = true
+if DEBUG then
+    lick = require "lick"
+    lick.reset = true
+end
 
 function love.load( arg ) 
-    SW, SH = love.graphics.getDimensions()
+    local opts = {
+        fsaa = 16,
+        resizable = true,
+        highdpi = true
+    }
+    local w = 1680
+    if DEBUG then
+        opts.display = 2
+        w = 1050 
+    end
+    local h = w / 1.69999
+    love.window.setMode( w, h, opts)
     DEAD_ZONE = 0.15
+
+    setupShip( love.graphics.getDimensions() )
+end
+
+function setupShip( W, H )
+    if DEBUG then
+        print( "Creating ship for resolution " .. W .. "x" .. H )
+    end
     stick = {
         mode = "fill",
         color = { 215, 144, 66 },
-        x = SW/2,
-        y = SH/2,
-        w = 25,
-        h = SH * 2
+        x = W/2,
+        y = H/2,
+        w = W/50,
+        h = H * 2
     }
     stick.x = stick.x - stick.w/2
     ship = { 
@@ -18,9 +40,13 @@ function love.load( arg )
         color = { 205, 205, 205 },
         x = stick.x,
         y = stick.y,
-        w = 220,
-        h = 60,
-        v = 350
+        w = W/8,
+        h = W/1.6999/16,
+        v = {
+            x = W / 1.5,
+            y = H / 0.66
+        },
+        multiplier = 3
     }
     shipFin = {
         mode = "fill",
@@ -40,12 +66,32 @@ function love.load( arg )
     }
     shipWing.x = shipWing.x - shipWing.w/2
     shipWing.y = shipWing.y - shipWing.h/2
+
+    wheels = {
+        mode = "fill",
+        innerColor = { 255, 30, 30 },
+        outerColor = { 30, 30, 255 },
+        outerRad = ship.h / 2,
+        innerRad = ship.h / 4,
+        locations = {
+            {
+                x = ship.x,
+                y = ship.y + ship.h
+            }, {
+                x = ship.x + ship.w,
+                y = ship.y + ship.h
+            }
+        }
+    }
+    wheels.locations[1].x = wheels.locations[1].x + wheels.outerRad/2 + 10
+    wheels.locations[2].x = wheels.locations[2].x - wheels.outerRad/2 - 10
 end
 
 function love.update( dt )
     local g = love.joystick.getJoysticks()[1]
     local dx = g:getGamepadAxis("leftx")
     local dy = g:getGamepadAxis("lefty")
+    local multiplier = ship.multiplier * g:getGamepadAxis("triggerright") + 1
 
     if math.abs(dx) < DEAD_ZONE then
         dx = 0
@@ -54,15 +100,27 @@ function love.update( dt )
         dy = 0
     end
 
-    stick.x = stick.x + (dx * ship.v * dt)
-    stick.y = stick.y + (dy * ship.v * dt)
+    stick.x = stick.x + (dx * dt * ship.v.x * multiplier)
+    stick.y = stick.y + (dy * dt * ship.v.y * multiplier)
 
     ship.x = stick.x - ship.w/2 + stick.w/2
     ship.y = stick.y - ship.h/2
+
     shipFin.x = ship.x
     shipFin.y = ship.y
+
     shipWing.x = ship.x + ship.w/2 - shipWing.w/2
     shipWing.y = ship.y + ship.h/2 - shipWing.h/2
+
+    wheels.locations[1].x = ship.x + wheels.outerRad/2 + 10
+    wheels.locations[1].y = ship.y + ship.h
+
+    wheels.locations[2].x = ship.x + ship.w - wheels.outerRad/2 - 10
+    wheels.locations[2].y = ship.y + ship.h
+end
+
+function love.resize( w, h )
+    setupShip( w, h )
 end
 
 function love.draw()
@@ -81,5 +139,13 @@ function love.draw()
         shipFin.x + shipFin.w, shipFin.y,
         shipFin.x, shipFin.y - shipFin.h
     )
+
+    love.graphics.setColor( wheels.outerColor )
+    love.graphics.circle( wheels.mode, wheels.locations[1].x, wheels.locations[1].y, wheels.outerRad, 100 )
+    love.graphics.circle( wheels.mode, wheels.locations[2].x, wheels.locations[2].y, wheels.outerRad, 100 )
+
+    love.graphics.setColor( wheels.innerColor )
+    love.graphics.circle( wheels.mode, wheels.locations[1].x, wheels.locations[1].y, wheels.innerRad, 100 )
+    love.graphics.circle( wheels.mode, wheels.locations[2].x, wheels.locations[2].y, wheels.innerRad, 100 )
 end
 
