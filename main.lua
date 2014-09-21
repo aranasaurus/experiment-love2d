@@ -5,6 +5,7 @@ if DEBUG then
 end
 
 require "ship"
+lick.file = "ship.lua"
 
 function setupShip( W, H )
     local x = W/2
