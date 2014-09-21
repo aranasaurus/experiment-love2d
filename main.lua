@@ -10,7 +10,7 @@ lick.file = "ship.lua"
 function setupShip( W, H )
     local x = W/2
     local y = H/2
-    local w = W/6
+    local w = W/10
     local h = w/2.8
     local v = {
         x = W / 1.5,

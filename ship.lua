@@ -8,6 +8,7 @@ function Ship:new( x, y, w, h, v, gamepad )
 
     s.x = x
     s.y = y
+    s.tilt = 0
     s.w = w
     s.h = h
     s.v = v
@@ -69,6 +70,7 @@ function Ship:draw()
     love.graphics.origin()
 
     love.graphics.translate( self.x, self.y )
+    love.graphics.rotate( self.tilt )
 
     function drawRect( item )
         love.graphics.setColor( item.color )
@@ -126,6 +128,7 @@ function Ship:update( dt )
 
         self.x = self.x + (dx * dt * self.v.x * multiplier)
         self.y = self.y + (dy * dt * self.v.y * multiplier)
+        self.tilt = math.pi/12 * dx
     end
 end
 
