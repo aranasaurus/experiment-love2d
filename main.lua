@@ -51,7 +51,7 @@ function love.resize( w, h )
 end
 
 function love.draw()
-    ship:draw()
     ship2:draw()
+    ship:draw()
 end
 

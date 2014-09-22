@@ -62,6 +62,20 @@ function Ship:new( x, y, w, h, v, gamepad )
     s.wheels.locations[2].x = w - s.wheels.innerRad
     s.wheels = nil
 
+    s.flames = {
+        on = false,
+        mode = "fill",
+        innerColor = { 255, 200, 55, 255 },
+        innerScale = 0.66,
+        outerColor = { 255, 0, 0, 255 },
+        outerScale = 1.0,
+        d = 0.25,
+        x = 0,
+        y = s.h/2,
+        w = 1.0,
+        h = 1.25
+    }
+
     return s
 end
 
@@ -79,6 +93,36 @@ function Ship:draw()
     drawRect( self.stick )
     drawRect( self.body )
     drawRect( self.wing )
+
+    if self.flames.on then
+        local flameHeight = self.flames.h * self.h
+        local flameWidth = self.flames.w * self.w
+        function drawFlame( scale, color )
+            love.graphics.push()
+            love.graphics.setColor( color )
+            love.graphics.translate( self.flames.x - (self.flames.x * scale),
+                self.flames.y - (self.flames.y * scale) )
+            love.graphics.scale( scale )
+            love.graphics.polygon( self.flames.mode,
+                self.flames.x, self.flames.y,
+                self.flames.x, self.flames.y - flameHeight/4,
+                self.flames.x - flameWidth/4, self.flames.y - flameHeight/2,
+                self.flames.x - flameWidth/4.7, self.flames.y - flameHeight/3.4,
+                self.flames.x - flameWidth/2.15, self.flames.y - flameHeight/2.6,
+                self.flames.x - flameWidth/2.7, self.flames.y - flameHeight/5.6,
+                self.flames.x - flameWidth, self.flames.y,
+                self.flames.x - flameWidth/2.7, self.flames.y + flameHeight/5.6,
+                self.flames.x - flameWidth/2.15, self.flames.y + flameHeight/2.6,
+                self.flames.x - flameWidth/4.7, self.flames.y + flameHeight/3.4,
+                self.flames.x - flameWidth/4, self.flames.y + flameHeight/2,
+                self.flames.x, self.flames.y + flameHeight/4
+            )
+            love.graphics.pop()
+        end
+
+        drawFlame( self.flames.outerScale * self.flames.d, self.flames.outerColor )
+        drawFlame( self.flames.innerScale * self.flames.d, self.flames.innerColor )
+    end
 
     love.graphics.setColor( self.fin.color )
     love.graphics.polygon( self.fin.mode,
@@ -129,6 +173,11 @@ function Ship:update( dt )
         self.x = self.x + (dx * dt * self.v.x * multiplier)
         self.y = self.y + (dy * dt * self.v.y * multiplier)
         self.tilt = math.pi/12 * dx
+
+        self.flames.on = math.abs( dx ) > 0 or math.abs( dy ) > 0
+        if self.flames.on then
+            self.flames.d = math.min(multiplier, 1.66)
+        end
     end
 end
 
