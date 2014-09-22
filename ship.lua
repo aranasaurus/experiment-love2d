@@ -12,6 +12,7 @@ function Ship:new( x, y, w, h, v, gamepad )
     s.w = w
     s.h = h
     s.v = v
+    s.dir = 1
     s.multiplier = 3
     s.gamepad = gamepad or 1
 
@@ -26,8 +27,8 @@ function Ship:new( x, y, w, h, v, gamepad )
         mode = "fill",
         color = { 215, 144, 66 },
         x = w/2,
-        y = h/2,
-        w = 1/12, -- of self.w
+        y = h * 0.75,
+        w = 1/6, -- of self.w
         h = 600 -- of self.h
     }
     s.stick.x = s.stick.x - s.stick.w * s.w/2
@@ -85,14 +86,24 @@ function Ship:draw()
 
     love.graphics.translate( self.x, self.y )
     love.graphics.rotate( self.tilt )
+    if self.dir < 0 then
+        love.graphics.scale( -1, 1 )
+    end
 
     function drawRect( item )
         love.graphics.setColor( item.color )
         love.graphics.rectangle( item.mode, item.x, item.y, item.w * self.w, item.h * self.h )
     end
-    drawRect( self.stick )
-    drawRect( self.body )
-    drawRect( self.wing )
+
+    if self.dir < 0 then
+        drawRect( self.body )
+        drawRect( self.wing )
+        drawRect( self.stick )
+    else
+        drawRect( self.stick )
+        drawRect( self.body )
+        drawRect( self.wing )
+    end
 
     if self.flames.on then
         local flameHeight = self.flames.h * self.h
@@ -178,6 +189,7 @@ function Ship:update( dt )
         if self.flames.on then
             self.flames.d = math.min(multiplier, 1.66)
         end
+        self.dir = dx
     end
 end
 
