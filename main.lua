@@ -7,7 +7,10 @@ end
 require "ship"
 lick.file = "ship.lua"
 
-function setupShip( W, H )
+ships = { }
+
+function addShip( gamepad )
+    local W, H = love.graphics.getDimensions()
     local x = W/2
     local y = H/2
     local w = W/10
@@ -16,9 +19,14 @@ function setupShip( W, H )
         x = W / 1.5,
         y = H / 0.66
     }
-    ship = Ship:new( x - w/2, y - h/2, w, h, v, 1 )
-    ship2 = Ship:new( w + 10, h + 10, w, h, v, 2 )
-    ship2.body.color = { 255, 200, 200 }
+
+    ships[gamepad:getID()] = Ship:new( x - w/2, y - h/2, w, h, v, gamepad )
+end
+
+function resetShips()
+    for _, gamepad in ipairs( love.joystick.getJoysticks() ) do
+        addShip( gamepad )
+    end
 end
 
 function love.load( arg ) 
@@ -38,20 +46,36 @@ function love.load( arg )
     love.window.setMode( w, h, opts)
     DEAD_ZONE = 0.15
 
-    setupShip( love.graphics.getDimensions() )
+    resetShips()
 end
 
 function love.update( dt )
-    ship:update( dt )
-    ship2:update( dt )
+    for _, s in ipairs( ships ) do
+        s:update( dt )
+    end
 end
 
 function love.resize( w, h )
-    setupShip( w, h )
+    resetShips()
 end
 
 function love.draw()
-    ship2:draw()
-    ship:draw()
+    for _, s in ipairs( ships ) do
+        s:draw()
+    end
+end
+
+function love.joystickadded( joystick )
+    addShip( joystick )
+end
+
+function love.joystickremoved( joystick )
+    ships[joystick:getID()] = nil
+end
+
+function love.gamepadreleased( gamepad, button )
+    if button == "leftshoulder" or button == "rightshoulder" then
+        ships[gamepad:getID()]:changeColor()
+    end
 end
 

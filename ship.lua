@@ -1,6 +1,16 @@
 Ship = {}
 --lick.file = "main.lua"
 
+Ship.colors = {
+        { 205, 205, 205 },
+        { 205, 255, 205 },
+        { 255, 205, 205 },
+        { 205, 205, 255 }
+}
+
+Ship.activeColors = {
+}
+
 function Ship:new( x, y, w, h, v, gamepad )
     s = {}
     setmetatable( s, self )
@@ -14,14 +24,15 @@ function Ship:new( x, y, w, h, v, gamepad )
     s.v = v
     s.dir = 1
     s.multiplier = 3
-    s.gamepad = gamepad or 1
+    s.gamepad = gamepad
 
     s.body = {
         mode = "fill",
-        color = { 205, 205, 205 },
+        color = Ship.colors[gamepad:getID() % #Ship.colors + 1],
         x = 0, y = 0,
         w = 1, h = 1
     }
+    Ship.activeColors[s.body.color] = true
 
     s.stick = {
         mode = "fill",
@@ -160,7 +171,7 @@ function Ship:draw()
 end
 
 function Ship:update( dt )
-    local g = love.joystick.getJoysticks()[self.gamepad]
+    local g = self.gamepad
     if g ~= nil then
         if g:isGamepadDown( "a", "b", "x", "y", "back", "start" ) then
             self.x = love.window.getWidth()/2 - self.w/2
@@ -190,6 +201,40 @@ function Ship:update( dt )
             self.flames.d = math.min(multiplier, 1.66)
         end
         self.dir = dx
+    end
+end
+
+function Ship:changeColor()
+    local curIndex = 1
+    for i, c in ipairs( Ship.colors ) do
+        if c == self.body.color then
+            curIndex = i
+            break
+        end
+    end
+    local startIndex = (curIndex + 1)
+    function iterateColors( dir )
+        local endIndex = #Ship.colors
+        if dir == -1 then
+            endIndex = 1
+        elseif startIndex > #Ship.colors then
+            startIndex = 1
+        end
+        for i = startIndex, endIndex, dir do
+            local c = Ship.colors[i]
+            if not Ship.activeColors[c] then
+                Ship.activeColors[self.body.color] = false
+                self.body.color = c
+                Ship.activeColors[c] = true
+                return true
+            end
+        end
+        return false
+    end
+
+    if not iterateColors( 1 ) and not iterateColors( -1 ) then
+        Ship.activeColors[self.body.color] = false
+        self.body.color = { math.random(255), math.random(255), math.random(255) }
     end
 end
 
