@@ -3,8 +3,8 @@ Ship = {}
 
 Ship.colors = {
         { 205, 205, 205 },
-        { 205, 255, 205 },
         { 255, 205, 205 },
+        { 205, 255, 205 },
         { 205, 205, 255 }
 }
 
@@ -28,11 +28,11 @@ function Ship:new( x, y, w, h, v, gamepad )
 
     s.body = {
         mode = "fill",
-        color = Ship.colors[gamepad:getID() % #Ship.colors + 1],
         x = 0, y = 0,
         w = 1, h = 1
     }
-    Ship.activeColors[s.body.color] = true
+    s.colorIndex = 0
+    s:setColor( gamepad:getID() % (#Ship.colors + 1) )
 
     s.stick = {
         mode = "fill",
@@ -173,7 +173,7 @@ end
 function Ship:update( dt )
     local g = self.gamepad
     if g ~= nil then
-        if g:isGamepadDown( "a", "b", "x", "y", "back", "start" ) then
+        if g:isGamepadDown( "back", "start" ) then
             self.x = love.window.getWidth()/2 - self.w/2
             self.y = love.window.getHeight()/2 - self.h/2
         end
@@ -204,37 +204,53 @@ function Ship:update( dt )
     end
 end
 
-function Ship:changeColor()
-    local curIndex = 1
-    for i, c in ipairs( Ship.colors ) do
-        if c == self.body.color then
-            curIndex = i
+function Ship:changeColor( dir )
+    local curIndex = self.colorIndex
+
+    local startIndex = curIndex + dir
+    if startIndex > #Ship.colors then
+        startIndex = 1
+    elseif startIndex < 1 then
+        startIndex = #Ship.colors
+    end
+
+    local endIndex = #Ship.colors
+    if dir < 0 then
+        endIndex = 1
+    end
+
+    for i = startIndex, endIndex, dir do
+        if not Ship.activeColors[i] then
+            self:setColor( i )
             break
         end
     end
-    local startIndex = (curIndex + 1)
-    function iterateColors( dir )
-        local endIndex = #Ship.colors
-        if dir == -1 then
-            endIndex = 1
-        elseif startIndex > #Ship.colors then
-            startIndex = 1
-        end
-        for i = startIndex, endIndex, dir do
-            local c = Ship.colors[i]
-            if not Ship.activeColors[c] then
-                Ship.activeColors[self.body.color] = false
-                self.body.color = c
-                Ship.activeColors[c] = true
-                return true
-            end
-        end
-        return false
-    end
 
-    if not iterateColors( 1 ) and not iterateColors( -1 ) then
-        Ship.activeColors[self.body.color] = false
-        self.body.color = { math.random(255), math.random(255), math.random(255) }
+    if self.colorIndex == curIndex then
+        self:setRandomColor()
     end
+end
+
+function Ship:setColor( color )
+    if type(color) == "number" then
+        if self.colorIndex > 0 then
+            Ship.activeColors[self.colorIndex] = false
+        end
+        Ship.activeColors[color] = true
+        self.colorIndex = color
+        self.body.color = Ship.colors[color]
+    elseif type(color) == "table" then
+        if self.colorIndex > 0 then
+            Ship.activeColors[self.colorIndex] = false
+        end
+        self.colorIndex = 0
+        self.body.color = color
+    else
+        print( "Tried to set color of player '" .. self.gamepad:getID() .. "' to '" .. type(color) .. "'" )
+    end
+end
+
+function Ship:setRandomColor()
+    self:setColor( { math.random(255), math.random(255), math.random(255) } )
 end
 

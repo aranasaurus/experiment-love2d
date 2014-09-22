@@ -74,8 +74,12 @@ function love.joystickremoved( joystick )
 end
 
 function love.gamepadreleased( gamepad, button )
-    if button == "leftshoulder" or button == "rightshoulder" then
-        ships[gamepad:getID()]:changeColor()
+    if button == "leftshoulder" then
+        ships[gamepad:getID()]:changeColor( -1 )
+    elseif button == "rightshoulder" then
+        ships[gamepad:getID()]:changeColor( 1 )
+    elseif button == "a" or button == "b" or button == "x" or button == "y" then
+        ships[gamepad:getID()]:setRandomColor()
     end
 end
 
