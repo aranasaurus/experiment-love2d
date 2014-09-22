@@ -46,18 +46,27 @@ function Ship:new( x, y, w, h, v, gamepad )
 
     s.fin = {
         mode = "fill",
-        color = { 255, 30, 30 },
+        color = { 205, 30, 30 },
         x = 0, y = 0,
         w = 0.25, h = 0.75
     }
 
     s.wing = {
         mode = "fill",
-        color = { 255, 30, 30 },
+        color = { 205, 30, 30 },
         w = 0.5, h = 0.125
     }
     s.wing.x = w/2 - s.wing.w * w/2
     s.wing.y = h/2 - s.wing.h * h/2
+
+    s.tape = {
+        mode = "fill",
+        color = { 255, 255, 255, 255 * 0.5 },
+        w = s.stick.w * 2,
+        h = 0.33
+    }
+    s.tape.x = s.w/2 - s.w * s.tape.w/2
+    s.tape.y = s.wing.y + s.h * s.wing.h + s.h * s.tape.h/6
 
     s.wheels = {
         mode = "fill",
@@ -110,6 +119,7 @@ function Ship:draw()
         drawRect( self.body )
         drawRect( self.wing )
         drawRect( self.stick )
+        drawRect( self.tape )
     else
         drawRect( self.stick )
         drawRect( self.body )
