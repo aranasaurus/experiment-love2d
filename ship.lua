@@ -32,7 +32,11 @@ function Ship:new( x, y, w, h, v, gamepad )
         w = 1, h = 1
     }
     s.colorIndex = 0
-    s:setColor( gamepad:getID() % (#Ship.colors + 1) )
+    if gamepad then
+        s:setColor( gamepad:getID() % (#Ship.colors + 1) )
+    else
+        s:setColor( math.random( #Ship.colors ) )
+    end
 
     s.stick = {
         mode = "fill",
@@ -182,36 +186,67 @@ end
 
 function Ship:update( dt )
     local g = self.gamepad
-    if g ~= nil then
-        if g:isGamepadDown( "back", "start" ) then
-            self.x = love.window.getWidth()/2 - self.w/2
-            self.y = love.window.getHeight()/2 - self.h/2
-        end
+    local dx = 0.0
+    local dy = 0.0
+    local dm = 0.0
+    local reset = false
 
-        local dx = g:getGamepadAxis("leftx")
-        local dy = g:getGamepadAxis("lefty")
+    if g ~= nil then
+        reset = g:isGamepadDown( "back", "start" )
+
+        dx = g:getGamepadAxis("leftx")
+        dy = g:getGamepadAxis("lefty")
         local rmulti = g:getGamepadAxis("triggerright")
         local lmulti = g:getGamepadAxis("triggerleft")
-        local multiplier = self.multiplier * math.max(rmulti, lmulti) + 1
+        dm = math.max(rmulti, lmulti)
 
-        --self.debugText = "LMULTI: " .. lmulti .. "\nRMULTI: " .. rmulti .. "\nMULTI: " .. multiplier
         if math.abs(dx) < DEAD_ZONE then
             dx = 0
         end
         if math.abs(dy) < DEAD_ZONE then
             dy = 0
         end
+    else
+        reset = love.keyboard.isDown( "r", "return" )
 
-        self.x = self.x + (dx * dt * self.v.x * multiplier)
-        self.y = self.y + (dy * dt * self.v.y * multiplier)
-        self.tilt = math.pi/12 * dx
-
-        self.flames.on = math.abs( dx ) > 0 or math.abs( dy ) > 0
-        if self.flames.on then
-            self.flames.d = math.min(multiplier, 1.66)
+        if love.keyboard.isDown( "right" ) then
+            dx = 1.0
+        elseif love.keyboard.isDown( "left" ) then
+            dx = -1.0
+        else
+            dx = 0.0
         end
-        self.dir = dx
+
+        if love.keyboard.isDown( "up" ) then
+            dy = -1.0
+        elseif love.keyboard.isDown( "down" ) then
+            dy = 1.0
+        else
+            dy = 0.0
+        end
+
+        if love.keyboard.isDown( " ", "lshift", "rshift" ) then
+            dm = 1.0
+        else
+            dm = 0.0
+        end
     end
+
+    if reset then
+        self.x = love.window.getWidth()/2 - self.w/2
+        self.y = love.window.getHeight()/2 - self.h/2
+    end
+
+    local multiplier = self.multiplier * dm + 1.0
+    self.x = self.x + (dx * dt * self.v.x * multiplier)
+    self.y = self.y + (dy * dt * self.v.y * multiplier)
+    self.tilt = math.pi/12 * dx
+
+    self.flames.on = math.abs( dx ) > 0 or math.abs( dy ) > 0
+    if self.flames.on then
+        self.flames.d = math.min(multiplier, 1.66)
+    end
+    self.dir = dx
 end
 
 function Ship:changeColor( dir )

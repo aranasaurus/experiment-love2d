@@ -9,23 +9,31 @@ lick.file = "ship.lua"
 
 ships = { }
 
-function addShip( gamepad )
+function addShip( id, gamepad )
     local W, H = love.graphics.getDimensions()
     local x = W/2
     local y = H/2
-    local w = W/10
+    local w = W/8
     local h = w/2.8
     local v = {
         x = W / 1.5,
         y = H / 0.66
     }
 
-    ships[gamepad:getID()] = Ship:new( x - w/2, y - h/2, w, h, v, gamepad )
+    ships[id] = Ship:new( x - w/2, y - h/2, w, h, v, gamepad )
 end
 
 function resetShips()
-    for _, gamepad in ipairs( love.joystick.getJoysticks() ) do
-        addShip( gamepad )
+    ships = { }
+
+    local joysticks = love.joystick.getJoysticks()
+    
+    if #joysticks == 0 then
+        addShip( "keyboard" )
+    end
+
+    for _, gamepad in ipairs( joysticks ) do
+        addShip( gamepad:getID(), gamepad )
     end
 end
 
@@ -50,7 +58,7 @@ function love.load( arg )
 end
 
 function love.update( dt )
-    for _, s in ipairs( ships ) do
+    for _, s in pairs( ships ) do
         s:update( dt )
     end
 end
@@ -60,7 +68,7 @@ function love.resize( w, h )
 end
 
 function love.draw()
-    for _, s in ipairs( ships ) do
+    for _, s in pairs( ships ) do
         s:draw()
     end
 end
@@ -80,6 +88,16 @@ function love.gamepadreleased( gamepad, button )
         ships[gamepad:getID()]:changeColor( 1 )
     elseif button == "a" or button == "b" or button == "x" or button == "y" then
         ships[gamepad:getID()]:setRandomColor()
+    end
+end
+
+function love.keypressed( button )
+    if button == "z" or button == "[" then
+        ships["keyboard"]:changeColor( -1 )
+    elseif button == "x" or button == "]" then
+        ships["keyboard"]:changeColor( 1 )
+    elseif button == "c" or button == "/" then
+        ships["keyboard"]:setRandomColor()
     end
 end
 
