@@ -11,6 +11,14 @@ Ship.colors = {
 Ship.activeColors = {
 }
 
+Ship.turboSound = love.audio.newSource( "res/audio/ship_engine_turbo01.mp3", "static" )
+Ship.turboSound:setVolume( 0.9 )
+
+Ship.engineSounds = {
+    love.audio.newSource( "res/audio/ship_engine01.mp3", "static" ),
+    love.audio.newSource( "res/audio/ship_engine02.mp3", "static" )
+}
+
 function Ship:new( x, y, w, h, v, gamepad )
     s = {}
     setmetatable( s, self )
@@ -100,6 +108,12 @@ function Ship:new( x, y, w, h, v, gamepad )
         w = 1.0,
         h = 1.25
     }
+
+    s.turboSound = Ship.turboSound:clone()
+    for i, s in pairs( Ship.engineSounds ) do
+        self.engineSounds[i] = s:clone()
+        self.engineSounds[i]:setVolume(0.6)
+    end
 
     return s
 end
@@ -238,13 +252,25 @@ function Ship:update( dt )
     end
 
     local multiplier = self.multiplier * dm + 1.0
-    self.x = self.x + (dx * dt * self.v.x * multiplier)
-    self.y = self.y + (dy * dt * self.v.y * multiplier)
+    local vx = dx * dt * self.v.x * multiplier
+    local vy = dy * dt * self.v.y * multiplier
+    self.x = self.x + vx
+    self.y = self.y + vy
     self.tilt = math.pi/12 * dx
 
+    local flamesOnLastFrame = self.flames.on
     self.flames.on = math.abs( dx ) > 0 or math.abs( dy ) > 0
     if self.flames.on then
         self.flames.d = math.min(multiplier, 1.66)
+
+        -- Play a random engine sound when changing direction
+        if (self.dir <= 0 and dx > 0) or (self.dir >= 0 and dx < 0) then
+            self.engineSounds[ math.random(#self.engineSounds) ]:play()
+        end
+    end
+
+    if dm > 0.5 then
+        self.turboSound:play()
     end
     self.dir = dx
 end
