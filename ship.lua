@@ -1,3 +1,5 @@
+require( "laser" )
+
 Ship = {}
 --lick.file = "main.lua"
 
@@ -20,7 +22,7 @@ Ship.engineSounds = {
 }
 
 function Ship:new( x, y, w, h, v, gamepad )
-    s = {}
+    local s = {}
     setmetatable( s, self )
     self.__index = self
 
@@ -33,6 +35,7 @@ function Ship:new( x, y, w, h, v, gamepad )
     s.dir = 1
     s.multiplier = 3
     s.gamepad = gamepad
+    s.lasers = { }
 
     s.body = {
         mode = "fill",
@@ -119,6 +122,10 @@ function Ship:new( x, y, w, h, v, gamepad )
 end
 
 function Ship:draw()
+    for _, l in ipairs( self.lasers ) do
+        l:draw()
+    end
+
     love.graphics.push()
     love.graphics.origin()
 
@@ -199,6 +206,13 @@ function Ship:draw()
 end
 
 function Ship:update( dt )
+    for i, l in ipairs( self.lasers ) do
+        l:update( dt )
+        if l.x < 0 or l.x > W then
+            table.remove( self.lasers, i )
+        end
+    end
+
     local g = self.gamepad
     local dx = 0.0
     local dy = 0.0
@@ -325,3 +339,6 @@ function Ship:setRandomColor()
     self:setColor( { math.random(255), math.random(255), math.random(255) } )
 end
 
+function Ship:fire()
+    table.insert( self.lasers, Laser:new( self.x + self.w/2, self.y + self.h/2, self.dir, self.v.x * 2.5, self.body.color ) )
+end

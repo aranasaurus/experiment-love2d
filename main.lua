@@ -10,7 +10,7 @@ lick.file = "ship.lua"
 ships = { }
 
 function addShip( id, gamepad )
-    local W, H = love.graphics.getDimensions()
+    W, H = love.graphics.getDimensions()
     local x = W/2
     local y = H/2
     local w = W/8
@@ -86,8 +86,10 @@ function love.gamepadreleased( gamepad, button )
         ships[gamepad:getID()]:changeColor( -1 )
     elseif button == "rightshoulder" then
         ships[gamepad:getID()]:changeColor( 1 )
-    elseif button == "a" or button == "b" or button == "x" or button == "y" then
+    elseif button == "y" then
         ships[gamepad:getID()]:setRandomColor()
+    elseif button == "x" or button == "a" then
+        ships[gamepad:getID()]:fire()
     end
 end
 
